@@ -52,18 +52,18 @@ export const filmService = {
     return data
   },
 
-  async create(film, sellerId, sellerName) {
+  async create(film, sellerId, sellerName, client = supabase) {
     const payload = { ...film, seller_id: sellerId, seller_name: sellerName || 'Unknown' }
-    const { data, error } = await supabase.from('film_makers').insert([payload]).select().single()
+    const { data, error } = await client.from('film_makers').insert([payload]).select().single()
     if (error) throw { status: 400, message: error.message }
     return data
   },
 
-  async update(id, updates, userId) {
+  async update(id, updates, userId, client = supabase) {
     const film = await this.getById(id)
     if (film.seller_id !== userId) throw { status: 403, message: 'No puedes editar este film' }
 
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('film_makers')
       .update(updates)
       .eq('id', id)
@@ -73,10 +73,10 @@ export const filmService = {
     return data
   },
 
-  async remove(id, userId) {
+  async remove(id, userId, client = supabase) {
     const film = await this.getById(id)
     if (film.seller_id !== userId) throw { status: 403, message: 'No puedes eliminar este film' }
-    const { error } = await supabase.from('film_makers').delete().eq('id', id)
+    const { error } = await client.from('film_makers').delete().eq('id', id)
     if (error) throw { status: 500, message: error.message }
     return { success: true }
   },

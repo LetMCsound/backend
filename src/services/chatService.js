@@ -31,8 +31,8 @@ export const chatService = {
   async getOrCreateConversation({
     buyerId, sellerId, buyerName, sellerName,
     productId = null, productType = null, productTitle = null
-  }) {
-    let q = supabase
+  }, client = supabase) {
+    let q = client
       .from('conversations')
       .select('*')
       .eq('buyer_id', buyerId)
@@ -43,7 +43,7 @@ export const chatService = {
     const { data: existing } = await q.limit(1).maybeSingle()
     if (existing) return existing
 
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('conversations')
       .insert([{
         buyer_id: buyerId,
@@ -61,7 +61,7 @@ export const chatService = {
     return data
   },
 
-  async updateConversationStatus(conversationId, status, finalPrice = null, userId) {
+  async updateConversationStatus(conversationId, status, finalPrice = null, userId, client = supabase) {
     const conv = await this._getConversation(conversationId)
     if (conv.buyer_id !== userId && conv.seller_id !== userId) {
       throw { status: 403, message: 'No tienes acceso a esta conversación' }
@@ -70,7 +70,7 @@ export const chatService = {
     const updates = { status }
     if (finalPrice !== null) updates.final_price = finalPrice
 
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('conversations')
       .update(updates)
       .eq('id', conversationId)
@@ -80,10 +80,9 @@ export const chatService = {
     return data
   },
 
-  async signContract(conversationId, role, userId) {
+  async signContract(conversationId, role, userId, client = supabase) {
     const conv = await this._getConversation(conversationId)
 
-    // Verificar que el usuario tiene el rol correcto
     if (role === 'buyer' && conv.buyer_id !== userId) {
       throw { status: 403, message: 'No eres el comprador' }
     }
@@ -99,7 +98,7 @@ export const chatService = {
       updates.contract_signed_at = new Date().toISOString()
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('conversations')
       .update(updates)
       .eq('id', conversationId)
@@ -125,13 +124,13 @@ export const chatService = {
     return data
   },
 
-  async sendMessage({ conversationId, senderId, senderName, content, type = 'text', offerAmount = null }) {
+  async sendMessage({ conversationId, senderId, senderName, content, type = 'text', offerAmount = null }, client = supabase) {
     const conv = await this._getConversation(conversationId)
     if (conv.buyer_id !== senderId && conv.seller_id !== senderId) {
       throw { status: 403, message: 'No tienes acceso a esta conversación' }
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('messages')
       .insert([{
         conversation_id: conversationId,
@@ -148,19 +147,19 @@ export const chatService = {
     return data
   },
 
-  async respondToOffer(messageId, status, conversationId, amount, userId) {
+  async respondToOffer(messageId, status, conversationId, amount, userId, client = supabase) {
     const conv = await this._getConversation(conversationId)
     if (conv.buyer_id !== userId && conv.seller_id !== userId) {
       throw { status: 403, message: 'No tienes acceso a esta conversación' }
     }
 
-    await supabase
+    await client
       .from('messages')
       .update({ offer_status: status })
       .eq('id', messageId)
 
     if (status === 'accepted') {
-      await supabase
+      await client
         .from('conversations')
         .update({ status: 'accepted', final_price: amount })
         .eq('id', conversationId)

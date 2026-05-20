@@ -56,22 +56,22 @@ export const lyricsService = {
     return data
   },
 
-  async create(lyric, sellerId, sellerName) {
+  async create(lyric, sellerId, sellerName, client = supabase) {
     const payload = {
       ...lyric,
       seller_id: sellerId,
       seller_name: sellerName || lyric.seller_name || 'Unknown Artist'
     }
-    const { data, error } = await supabase.from('lyrics').insert([payload]).select().single()
+    const { data, error } = await client.from('lyrics').insert([payload]).select().single()
     if (error) throw { status: 400, message: error.message }
     return data
   },
 
-  async update(id, updates, userId) {
+  async update(id, updates, userId, client = supabase) {
     const lyric = await this.getById(id)
     if (lyric.seller_id !== userId) throw { status: 403, message: 'No puedes editar esta letra' }
 
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('lyrics')
       .update(updates)
       .eq('id', id)
@@ -81,11 +81,11 @@ export const lyricsService = {
     return data
   },
 
-  async remove(id, userId) {
+  async remove(id, userId, client = supabase) {
     const lyric = await this.getById(id)
     if (lyric.seller_id !== userId) throw { status: 403, message: 'No puedes eliminar esta letra' }
 
-    const { error } = await supabase.from('lyrics').delete().eq('id', id)
+    const { error } = await client.from('lyrics').delete().eq('id', id)
     if (error) throw { status: 500, message: error.message }
     return { success: true }
   }

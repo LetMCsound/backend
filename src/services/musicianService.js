@@ -55,11 +55,11 @@ export const musicianService = {
     return data
   },
 
-  async update(id, updates, userId) {
+  async update(id, updates, userId, client = supabase) {
     const musician = await this.getById(id)
     if (musician.user_id !== userId) throw { status: 403, message: 'No puedes editar este perfil' }
 
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('musicians')
       .update(updates)
       .eq('id', id)

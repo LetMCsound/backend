@@ -16,8 +16,8 @@ export const commentService = {
     return data
   },
 
-  async create({ userId, userName, contentId, contentType, text }) {
-    const { data, error } = await supabase
+  async create({ userId, userName, contentId, contentType, text }, client = supabase) {
+    const { data, error } = await client
       .from('comments')
       .insert([{
         user_id: userId,
@@ -32,8 +32,7 @@ export const commentService = {
     return data
   },
 
-  async remove(id, userId) {
-    // Verificar propiedad
+  async remove(id, userId, client = supabase) {
     const { data: comment } = await supabase
       .from('comments')
       .select('user_id')
@@ -42,7 +41,7 @@ export const commentService = {
     if (!comment) throw { status: 404, message: 'Comentario no encontrado' }
     if (comment.user_id !== userId) throw { status: 403, message: 'No puedes borrar este comentario' }
 
-    const { error } = await supabase.from('comments').delete().eq('id', id)
+    const { error } = await client.from('comments').delete().eq('id', id)
     if (error) throw { status: 500, message: error.message }
     return { success: true }
   }

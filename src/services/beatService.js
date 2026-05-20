@@ -78,23 +78,22 @@ export const beatService = {
     return data
   },
 
-  async create(beat, sellerId, sellerName) {
+  async create(beat, sellerId, sellerName, client = supabase) {
     const payload = {
       ...beat,
       seller_id: sellerId,
       seller_name: sellerName || beat.seller_name || 'Unknown Artist'
     }
-    const { data, error } = await supabase.from('beats').insert([payload]).select().single()
+    const { data, error } = await client.from('beats').insert([payload]).select().single()
     if (error) throw { status: 400, message: error.message }
     return data
   },
 
-  async update(id, updates, userId) {
-    // Verificar que el usuario es propietario
+  async update(id, updates, userId, client = supabase) {
     const beat = await this.getById(id)
     if (beat.seller_id !== userId) throw { status: 403, message: 'No puedes editar este beat' }
 
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('beats')
       .update(updates)
       .eq('id', id)
@@ -104,11 +103,11 @@ export const beatService = {
     return data
   },
 
-  async remove(id, userId) {
+  async remove(id, userId, client = supabase) {
     const beat = await this.getById(id)
     if (beat.seller_id !== userId) throw { status: 403, message: 'No puedes eliminar este beat' }
 
-    const { error } = await supabase.from('beats').delete().eq('id', id)
+    const { error } = await client.from('beats').delete().eq('id', id)
     if (error) throw { status: 500, message: error.message }
     return { success: true }
   },

@@ -52,17 +52,17 @@ export const graphicService = {
     return data
   },
 
-  async create(design, sellerId, sellerName) {
+  async create(design, sellerId, sellerName, client = supabase) {
     const payload = { ...design, seller_id: sellerId, seller_name: sellerName || 'Unknown' }
-    const { data, error } = await supabase.from('graphic_design').insert([payload]).select().single()
+    const { data, error } = await client.from('graphic_design').insert([payload]).select().single()
     if (error) throw { status: 400, message: error.message }
     return data
   },
 
-  async update(id, updates, userId) {
+  async update(id, updates, userId, client = supabase) {
     const design = await this.getById(id)
     if (design.seller_id !== userId) throw { status: 403, message: 'No puedes editar este diseño' }
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('graphic_design')
       .update(updates)
       .eq('id', id)
@@ -72,10 +72,10 @@ export const graphicService = {
     return data
   },
 
-  async remove(id, userId) {
+  async remove(id, userId, client = supabase) {
     const design = await this.getById(id)
     if (design.seller_id !== userId) throw { status: 403, message: 'No puedes eliminar este diseño' }
-    const { error } = await supabase.from('graphic_design').delete().eq('id', id)
+    const { error } = await client.from('graphic_design').delete().eq('id', id)
     if (error) throw { status: 500, message: error.message }
     return { success: true }
   }

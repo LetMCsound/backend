@@ -18,14 +18,14 @@ export const commentController = {
         userId: req.user.id,
         userName: req.user.user_metadata?.name || req.user.email?.split('@')[0],
         ...req.body
-      })
+      }, req.supabase)
       res.status(201).json(data)
     } catch (err) { next(err) }
   },
 
   async remove(req, res, next) {
     try {
-      await commentService.remove(req.params.id, req.user.id)
+      await commentService.remove(req.params.id, req.user.id, req.supabase)
       res.status(204).send()
     } catch (err) { next(err) }
   }

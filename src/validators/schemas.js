@@ -88,16 +88,17 @@ export const lyricsSchemas = {
 export const musicianSchemas = {
   update: Joi.object({
     name:            Joi.string().min(1).max(200),
-    slug:            Joi.string().max(100).pattern(/^[a-z0-9-]+$/),
-    bio:             Joi.string().max(2000).allow(''),
-    location:        Joi.string().max(200).allow(''),
-    avatar_url:      Joi.string().uri().allow(''),
-    cover_url:       Joi.string().uri().allow(''),
-    categories:      Joi.array().items(Joi.string().max(50)),
-    link_youtube:    Joi.string().uri().allow(''),
-    link_soundcloud: Joi.string().uri().allow(''),
-    link_instagram:  Joi.string().uri().allow(''),
-    link_spotify:    Joi.string().uri().allow('')
+    slug:            Joi.string().max(100).pattern(/^[a-z0-9-]+$/).allow('', null),
+    bio:             Joi.string().max(2000).allow('', null),
+    location:        Joi.string().max(200).allow('', null),
+    avatar_url:      Joi.string().uri().allow('', null),
+    cover_url:       Joi.string().uri().allow('', null),
+    categories:      Joi.array().items(Joi.string().max(50)).allow(null),
+    // Los enlaces sociales aceptan URL completa o solo el handle (@user)
+    link_youtube:    Joi.string().max(500).allow('', null),
+    link_soundcloud: Joi.string().max(500).allow('', null),
+    link_instagram:  Joi.string().max(500).allow('', null),
+    link_spotify:    Joi.string().max(500).allow('', null)
   }).min(1)
 }
 

@@ -16,8 +16,7 @@ export const notificationService = {
     return data
   },
 
-  async markAsRead(id, userId) {
-    // Verificar propiedad
+  async markAsRead(id, userId, client = supabase) {
     const { data: notif } = await supabase
       .from('notifications')
       .select('user_id')
@@ -26,7 +25,7 @@ export const notificationService = {
     if (!notif) throw { status: 404, message: 'Notificación no encontrada' }
     if (notif.user_id !== userId) throw { status: 403, message: 'No tienes acceso a esta notificación' }
 
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('notifications')
       .update({ is_read: true })
       .eq('id', id)
@@ -36,8 +35,8 @@ export const notificationService = {
     return data
   },
 
-  async markAllAsRead(userId) {
-    const { error } = await supabase
+  async markAllAsRead(userId, client = supabase) {
+    const { error } = await client
       .from('notifications')
       .update({ is_read: true })
       .eq('user_id', userId)
@@ -46,8 +45,8 @@ export const notificationService = {
     return { success: true }
   },
 
-  async create({ userId, type, title, body, conversationId = null }) {
-    const { data, error } = await supabase
+  async create({ userId, type, title, body, conversationId = null }, client = supabase) {
+    const { data, error } = await client
       .from('notifications')
       .insert([{
         user_id: userId,

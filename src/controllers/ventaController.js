@@ -4,7 +4,7 @@ export const ventaController = {
   async create(req, res, next) {
     try {
       const venta = { ...req.body, comprador: req.user.email }
-      const data = await ventaService.create(venta)
+      const data = await ventaService.create(venta, req.supabase)
       res.status(201).json(data)
     } catch (err) { next(err) }
   },

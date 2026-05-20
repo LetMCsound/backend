@@ -14,7 +14,7 @@ export const chatController = {
         ...req.body,
         buyerId: req.user.id,
         buyerName: req.user.user_metadata?.name || req.user.email?.split('@')[0]
-      })
+      }, req.supabase)
       res.json(data)
     } catch (err) { next(err) }
   },
@@ -22,7 +22,9 @@ export const chatController = {
   async updateStatus(req, res, next) {
     try {
       const { status, finalPrice } = req.body
-      const data = await chatService.updateConversationStatus(req.params.id, status, finalPrice ?? null, req.user.id)
+      const data = await chatService.updateConversationStatus(
+        req.params.id, status, finalPrice ?? null, req.user.id, req.supabase
+      )
       res.json(data)
     } catch (err) { next(err) }
   },
@@ -30,7 +32,7 @@ export const chatController = {
   async signContract(req, res, next) {
     try {
       const { role } = req.body
-      const data = await chatService.signContract(req.params.id, role, req.user.id)
+      const data = await chatService.signContract(req.params.id, role, req.user.id, req.supabase)
       res.json(data)
     } catch (err) { next(err) }
   },
@@ -49,7 +51,7 @@ export const chatController = {
         senderId: req.user.id,
         senderName: req.user.user_metadata?.name || req.user.email?.split('@')[0],
         ...req.body
-      })
+      }, req.supabase)
       res.status(201).json(data)
     } catch (err) { next(err) }
   },
@@ -57,7 +59,9 @@ export const chatController = {
   async respondToOffer(req, res, next) {
     try {
       const { status, conversationId, amount } = req.body
-      const data = await chatService.respondToOffer(req.params.messageId, status, conversationId, amount, req.user.id)
+      const data = await chatService.respondToOffer(
+        req.params.messageId, status, conversationId, amount, req.user.id, req.supabase
+      )
       res.json(data)
     } catch (err) { next(err) }
   }

@@ -22,17 +22,18 @@ export const graphicController = {
       const data = await graphicService.create(
         req.body,
         req.user.id,
-        req.user.user_metadata?.name || req.user.email?.split('@')[0]
+        req.user.user_metadata?.name || req.user.email?.split('@')[0],
+        req.supabase
       )
       res.status(201).json(data)
     } catch (err) { next(err) }
   },
   async update(req, res, next) {
-    try { res.json(await graphicService.update(req.params.id, req.body, req.user.id)) }
+    try { res.json(await graphicService.update(req.params.id, req.body, req.user.id, req.supabase)) }
     catch (err) { next(err) }
   },
   async remove(req, res, next) {
-    try { await graphicService.remove(req.params.id, req.user.id); res.status(204).send() }
+    try { await graphicService.remove(req.params.id, req.user.id, req.supabase); res.status(204).send() }
     catch (err) { next(err) }
   }
 }
