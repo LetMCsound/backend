@@ -59,30 +59,40 @@ Documentación interactiva en `http://localhost:3000/api-docs`.
 | POST | `/api/auth/login` | Login (devuelve JWT) | ❌ |
 | GET  | `/api/auth/me` | Usuario actual | ✅ |
 
-### Sounds
+### Beats
 | Método | Endpoint | Descripción | Auth |
 |--------|----------|-------------|------|
-| GET    | `/api/sounds` | Lista (filtros: genre, section, limit) | ❌ |
-| GET    | `/api/sounds/trending` | Top por likes | ❌ |
-| GET    | `/api/sounds/recent` | Más recientes | ❌ |
-| GET    | `/api/sounds/:id` | Detalle | ❌ |
-| POST   | `/api/sounds` | Crear | ✅ |
-| PUT    | `/api/sounds/:id` | Actualizar | ✅ |
-| DELETE | `/api/sounds/:id` | Eliminar | ✅ |
+| GET    | `/api/beats` | Lista (filtros: genre, type, sellerId, limit) | ❌ |
+| GET    | `/api/beats/search?q=` | Búsqueda textual | ❌ |
+| GET    | `/api/beats/popular` | Top por likes | ❌ |
+| GET    | `/api/beats/seller/:sellerId` | Beats de un vendedor | ❌ |
+| GET    | `/api/beats/:id` | Detalle | ❌ |
+| POST   | `/api/beats` | Crear | ✅ |
+| PUT    | `/api/beats/:id` | Actualizar (solo propietario) | ✅ |
+| DELETE | `/api/beats/:id` | Eliminar (solo propietario) | ✅ |
+| POST   | `/api/beats/:id/like` | +1 like | ❌ |
+| POST   | `/api/beats/:id/play` | +1 play | ❌ |
 
 ### Lyrics
 | Método | Endpoint | Descripción | Auth |
 |--------|----------|-------------|------|
-| GET    | `/api/lyrics` | Lista (filtro: genre) | ❌ |
+| GET    | `/api/lyrics` | Lista (filtros: genre, language) | ❌ |
+| GET    | `/api/lyrics/search?q=` | Búsqueda textual | ❌ |
+| GET    | `/api/lyrics/seller/:sellerId` | Letras de un vendedor | ❌ |
 | GET    | `/api/lyrics/:id` | Detalle | ❌ |
 | POST   | `/api/lyrics` | Crear | ✅ |
+| PUT    | `/api/lyrics/:id` | Actualizar | ✅ |
 | DELETE | `/api/lyrics/:id` | Eliminar | ✅ |
 
 ### Musicians
 | Método | Endpoint | Descripción | Auth |
 |--------|----------|-------------|------|
-| GET | `/api/musicians` | Lista (filtro: genre) | ❌ |
-| GET | `/api/musicians/:id` | Detalle | ❌ |
+| GET | `/api/musicians` | Lista (filtros: category, location) | ❌ |
+| GET | `/api/musicians/search?q=` | Búsqueda textual | ❌ |
+| GET | `/api/musicians/me` | Mi perfil | ✅ |
+| GET | `/api/musicians/slug/:slug` | Por slug público | ❌ |
+| GET | `/api/musicians/:id` | Detalle por ID | ❌ |
+| PUT | `/api/musicians/:id` | Actualizar perfil | ✅ |
 
 ### Ventas
 | Método | Endpoint | Descripción | Auth |
@@ -95,56 +105,19 @@ Documentación interactiva en `http://localhost:3000/api-docs`.
 |--------|----------|-------------|------|
 | POST | `/api/contratos/generar` | Genera y descarga PDF de contrato | ✅ |
 
-## Esquema de BD esperado (Supabase)
+## Esquema de BD (Supabase)
 
-```sql
--- Tabla: sounds
-CREATE TABLE sounds (
-  id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  title       text NOT NULL,
-  artist      text,
-  genre       text,
-  section     text,
-  bpm         int,
-  key         text,
-  scale       text,
-  cover_url   text,
-  audio_url   text,
-  description text,
-  likes       int DEFAULT 0,
-  created_at  timestamptz DEFAULT now()
-);
+El esquema completo está en las migraciones del frontend:
+`letmcsound/frontend/supabase/migrations/`
 
--- Tabla: lyrics
-CREATE TABLE lyrics (
-  id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  title       text NOT NULL,
-  artist      text,
-  genre       text,
-  cover_url   text,
-  preview     text,
-  full_text   text,
-  created_at  timestamptz DEFAULT now()
-);
+Tablas principales:
+- **beats** — Beats, songs y samples con precios por licencia, tags y stats
+- **lyrics** — Letras de canciones con idioma y contenido
+- **musicians** — Perfiles de artistas con slug, categorías y redes sociales
+- **ventas** — Registro de compras
+- **usuarios** — Datos extendidos de perfil (Supabase Auth maneja credenciales)
 
--- Tabla: musicians
-CREATE TABLE musicians (
-  id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  name        text NOT NULL,
-  role        text,
-  genre       text,
-  avatar_url  text,
-  banner_url  text,
-  bio         text,
-  followers   text,
-  beats       int DEFAULT 0,
-  songs       int DEFAULT 0,
-  verified    boolean DEFAULT false,
-  instagram   text,
-  soundcloud  text,
-  created_at  timestamptz DEFAULT now()
-);
-```
+Todas las tablas tienen **Row Level Security (RLS)** activo.
 
 ## Autenticación
 
