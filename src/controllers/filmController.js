@@ -1,4 +1,5 @@
 import { filmService } from '../services/filmService.js'
+import { getDisplayName } from '../lib/displayName.js'
 
 export const filmController = {
   async list(req, res, next) {
@@ -22,7 +23,7 @@ export const filmController = {
       const data = await filmService.create(
         req.body,
         req.user.id,
-        req.user.user_metadata?.name || req.user.email?.split('@')[0],
+        await getDisplayName(req.user),
         req.supabase
       )
       res.status(201).json(data)

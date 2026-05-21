@@ -1,4 +1,5 @@
 import { graphicService } from '../services/graphicService.js'
+import { getDisplayName } from '../lib/displayName.js'
 
 export const graphicController = {
   async list(req, res, next) {
@@ -22,7 +23,7 @@ export const graphicController = {
       const data = await graphicService.create(
         req.body,
         req.user.id,
-        req.user.user_metadata?.name || req.user.email?.split('@')[0],
+        await getDisplayName(req.user),
         req.supabase
       )
       res.status(201).json(data)

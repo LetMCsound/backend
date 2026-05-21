@@ -1,4 +1,5 @@
 import { chatService } from '../services/chatService.js'
+import { getDisplayName } from '../lib/displayName.js'
 
 export const chatController = {
   async myConversations(req, res, next) {
@@ -13,7 +14,7 @@ export const chatController = {
       const data = await chatService.getOrCreateConversation({
         ...req.body,
         buyerId: req.user.id,
-        buyerName: req.user.user_metadata?.name || req.user.email?.split('@')[0]
+        buyerName: await getDisplayName(req.user)
       }, req.supabase)
       res.json(data)
     } catch (err) { next(err) }
@@ -49,7 +50,7 @@ export const chatController = {
       const data = await chatService.sendMessage({
         conversationId: req.params.id,
         senderId: req.user.id,
-        senderName: req.user.user_metadata?.name || req.user.email?.split('@')[0],
+        senderName: await getDisplayName(req.user),
         ...req.body
       }, req.supabase)
       res.status(201).json(data)

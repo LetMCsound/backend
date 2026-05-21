@@ -1,4 +1,5 @@
 import { beatService } from '../services/beatService.js'
+import { getDisplayName } from '../lib/displayName.js'
 
 export const beatController = {
   async list(req, res, next) {
@@ -26,7 +27,7 @@ export const beatController = {
       const data = await beatService.create(
         req.body,
         req.user.id,
-        req.user.user_metadata?.name || req.user.email?.split('@')[0],
+        await getDisplayName(req.user),
         req.supabase
       )
       res.status(201).json(data)
