@@ -156,53 +156,52 @@ export const chatSchemas = {
 
 export const filmSchemas = {
   create: Joi.object({
-    title:           Joi.string().min(1).max(200).required(),
-    description:     Joi.string().max(2000).allow('', null),
-    genre:           Joi.string().max(100).allow('', null),
-    cover_url:       Joi.string().uri().allow('', null),
-    video_url:       Joi.string().uri().allow('', null),
-    price_standard:  Joi.number().positive().precision(2).default(49.99),
-    price_premium:   Joi.number().positive().precision(2).default(99.99),
-    price_exclusive: Joi.number().positive().precision(2).default(299.99),
-    tags:            Joi.array().items(Joi.string().max(50)).default([]),
-    is_published:    Joi.boolean().default(true)
+    title:         Joi.string().min(1).max(200).required(),
+    description:   Joi.string().max(2000).allow('', null),
+    genre:         Joi.string().max(100).allow('', null),
+    video_url:     Joi.string().uri().allow('', null),
+    thumbnail_url: Joi.string().uri().allow('', null),
+    duration:      Joi.string().max(50).allow('', null),
+    price:         Joi.number().positive().precision(2),
+    tags:          Joi.array().items(Joi.string().max(50)).default([]),
+    is_published:  Joi.boolean().default(true),
+    // Aceptamos seller_id/seller_name pero el backend los sobreescribe
+    seller_id:     Joi.string().optional(),
+    seller_name:   Joi.string().optional()
   }),
   update: Joi.object({
-    title:           Joi.string().min(1).max(200),
-    description:     Joi.string().max(2000).allow(''),
-    genre:           Joi.string().max(100).allow(''),
-    cover_url:       Joi.string().uri().allow(''),
-    video_url:       Joi.string().uri().allow(''),
-    price_standard:  Joi.number().positive().precision(2),
-    price_premium:   Joi.number().positive().precision(2),
-    price_exclusive: Joi.number().positive().precision(2),
-    tags:            Joi.array().items(Joi.string().max(50)),
-    is_published:    Joi.boolean()
+    title:         Joi.string().min(1).max(200),
+    description:   Joi.string().max(2000).allow(''),
+    genre:         Joi.string().max(100).allow(''),
+    video_url:     Joi.string().uri().allow(''),
+    thumbnail_url: Joi.string().uri().allow(''),
+    duration:      Joi.string().max(50).allow(''),
+    price:         Joi.number().positive().precision(2),
+    tags:          Joi.array().items(Joi.string().max(50)),
+    is_published:  Joi.boolean()
   }).min(1)
 }
 
 export const graphicSchemas = {
   create: Joi.object({
-    title:           Joi.string().min(1).max(200).required(),
-    description:     Joi.string().max(2000).allow('', null),
-    style:           Joi.string().max(100).allow('', null),
-    cover_url:       Joi.string().uri().allow('', null),
-    price_standard:  Joi.number().positive().precision(2).default(14.99),
-    price_premium:   Joi.number().positive().precision(2).default(39.99),
-    price_exclusive: Joi.number().positive().precision(2).default(99.99),
-    tags:            Joi.array().items(Joi.string().max(50)).default([]),
-    is_published:    Joi.boolean().default(true)
+    title:        Joi.string().min(1).max(200).required(),
+    description:  Joi.string().max(2000).allow('', null),
+    style:        Joi.string().max(100).allow('', null),
+    cover_url:    Joi.string().uri().allow('', null),
+    price:        Joi.number().positive().precision(2),
+    tags:         Joi.array().items(Joi.string().max(50)).default([]),
+    is_published: Joi.boolean().default(true),
+    seller_id:    Joi.string().optional(),
+    seller_name:  Joi.string().optional()
   }),
   update: Joi.object({
-    title:           Joi.string().min(1).max(200),
-    description:     Joi.string().max(2000).allow(''),
-    style:           Joi.string().max(100).allow(''),
-    cover_url:       Joi.string().uri().allow(''),
-    price_standard:  Joi.number().positive().precision(2),
-    price_premium:   Joi.number().positive().precision(2),
-    price_exclusive: Joi.number().positive().precision(2),
-    tags:            Joi.array().items(Joi.string().max(50)),
-    is_published:    Joi.boolean()
+    title:        Joi.string().min(1).max(200),
+    description:  Joi.string().max(2000).allow(''),
+    style:        Joi.string().max(100).allow(''),
+    cover_url:    Joi.string().uri().allow(''),
+    price:        Joi.number().positive().precision(2),
+    tags:         Joi.array().items(Joi.string().max(50)),
+    is_published: Joi.boolean()
   }).min(1)
 }
 
