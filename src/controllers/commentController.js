@@ -27,7 +27,7 @@ export const commentController = {
 
   async remove(req, res, next) {
     try {
-      await commentService.remove(req.params.id, req.user.id)
+      await commentService.remove(req.params.id, req.user.id, req.supabase)
       res.status(204).send()
     } catch (err) { next(err) }
   }
