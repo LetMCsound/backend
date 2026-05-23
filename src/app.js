@@ -14,7 +14,39 @@ const app = express()
 
 // ── Seguridad y middlewares globales ──
 app.use(helmet({ crossOriginResourcePolicy: false }))
-app.use(cors({ origin: config.cors.origin, credentials: true }))
+
+/**
+ * CORS dinámico:
+ *   - CORS_ORIGIN puede ser una lista separada por comas: "https://a.com,https://b.com"
+ *   - O un solo valor: "https://prod.com"
+ *   - O "*" para permitir cualquier origen (solo recomendado en dev)
+ *   - Además se permite cualquier subdominio *.vercel.app (preview deploys)
+ */
+const allowedOrigins = (config.cors.origin || '')
+  .split(',')
+  .map(s => s.trim())
+  .filter(Boolean)
+
+app.use(cors({
+  origin(origin, callback) {
+    // Permitir herramientas sin origin (curl, Postman, Swagger UI mismo dominio)
+    if (!origin) return callback(null, true)
+
+    // Wildcard absoluto
+    if (allowedOrigins.includes('*')) return callback(null, true)
+
+    // Coincidencia exacta
+    if (allowedOrigins.includes(origin)) return callback(null, true)
+
+    // Preview deploys de Vercel: https://frontend-xxx.vercel.app
+    if (/^https:\/\/[a-z0-9-]+\.vercel\.app$/i.test(origin)) {
+      return callback(null, true)
+    }
+
+    return callback(new Error(`CORS: origen no permitido (${origin})`))
+  },
+  credentials: true
+}))
 app.use(express.json({ limit: '5mb' }))
 app.use(express.urlencoded({ extended: true }))
 app.use(morgan(config.env === 'production' ? 'combined' : 'dev'))

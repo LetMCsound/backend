@@ -1,23 +1,19 @@
 import { supabase } from '../lib/supabase.js'
 
 /**
- * Servicio de lyrics — tabla public.lyrics
- * Esquema: id, seller_id, seller_name, title, description, genre, language,
- * content, cover_url, tags[], price_standard, price_premium, price_exclusive,
- * likes, is_published.
+ * Servicio de diseño gráfico — tabla public.graphic_design
+ * Esquema: seller_id, seller_name, title, description, style, cover_url,
+ * tags, prices, is_published.
  */
-export const lyricsService = {
-  async getAll({ genre, language, limit = 50 } = {}) {
+export const graphicService = {
+  async getAll({ style, limit = 50 } = {}) {
     let q = supabase
-      .from('lyrics')
+      .from('graphic_design')
       .select('*')
       .eq('is_published', true)
       .order('created_at', { ascending: false })
       .limit(parseInt(limit, 10))
-
-    if (genre)    q = q.eq('genre', genre)
-    if (language) q = q.eq('language', language)
-
+    if (style) q = q.eq('style', style)
     const { data, error } = await q
     if (error) throw { status: 500, message: error.message }
     return data
@@ -25,18 +21,18 @@ export const lyricsService = {
 
   async getById(id) {
     const { data, error } = await supabase
-      .from('lyrics')
+      .from('graphic_design')
       .select('*')
       .eq('id', id)
       .maybeSingle()
     if (error) throw { status: 500, message: error.message }
-    if (!data) throw { status: 404, message: 'Letra no encontrada' }
+    if (!data) throw { status: 404, message: 'Diseño no encontrado' }
     return data
   },
 
   async getBySeller(sellerId) {
     const { data, error } = await supabase
-      .from('lyrics')
+      .from('graphic_design')
       .select('*')
       .eq('seller_id', sellerId)
       .order('created_at', { ascending: false })
@@ -47,32 +43,27 @@ export const lyricsService = {
   async search(query, limit = 20) {
     if (!query) return []
     const { data, error } = await supabase
-      .from('lyrics')
+      .from('graphic_design')
       .select('*')
       .eq('is_published', true)
-      .or(`title.ilike.%${query}%,description.ilike.%${query}%,genre.ilike.%${query}%`)
+      .or(`title.ilike.%${query}%,description.ilike.%${query}%,style.ilike.%${query}%`)
       .limit(parseInt(limit, 10))
     if (error) throw { status: 500, message: error.message }
     return data
   },
 
-  async create(lyric, sellerId, sellerName, client = supabase) {
-    const payload = {
-      ...lyric,
-      seller_id: sellerId,
-      seller_name: sellerName || lyric.seller_name || 'Unknown Artist'
-    }
-    const { data, error } = await client.from('lyrics').insert([payload]).select().single()
+  async create(design, sellerId, sellerName, client = supabase) {
+    const payload = { ...design, seller_id: sellerId, seller_name: sellerName || 'Unknown' }
+    const { data, error } = await client.from('graphic_design').insert([payload]).select().single()
     if (error) throw { status: 400, message: error.message }
     return data
   },
 
   async update(id, updates, userId, client = supabase) {
-    const lyric = await this.getById(id)
-    if (lyric.seller_id !== userId) throw { status: 403, message: 'No puedes editar esta letra' }
-
+    const design = await this.getById(id)
+    if (design.seller_id !== userId) throw { status: 403, message: 'No puedes editar este diseño' }
     const { data, error } = await client
-      .from('lyrics')
+      .from('graphic_design')
       .update(updates)
       .eq('id', id)
       .select()
@@ -82,10 +73,9 @@ export const lyricsService = {
   },
 
   async remove(id, userId, client = supabase) {
-    const lyric = await this.getById(id)
-    if (lyric.seller_id !== userId) throw { status: 403, message: 'No puedes eliminar esta letra' }
-
-    const { error } = await client.from('lyrics').delete().eq('id', id)
+    const design = await this.getById(id)
+    if (design.seller_id !== userId) throw { status: 403, message: 'No puedes eliminar este diseño' }
+    const { error } = await client.from('graphic_design').delete().eq('id', id)
     if (error) throw { status: 500, message: error.message }
     return { success: true }
   }

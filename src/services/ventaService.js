@@ -1,8 +1,8 @@
 import { supabase } from '../lib/supabase.js'
 
 export const ventaService = {
-  async create(venta) {
-    const { data, error } = await supabase.from('ventas').insert([venta]).select().single()
+  async create(venta, client = supabase) {
+    const { data, error } = await client.from('ventas').insert([venta]).select().single()
     if (error) throw { status: 400, message: error.message }
     return data
   },

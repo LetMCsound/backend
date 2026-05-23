@@ -8,18 +8,49 @@ const router = Router()
 
 /**
  * @swagger
+ * tags:
+ *   name: Lyrics
+ *   description: Gestión de letras de canciones
+ */
+
+/**
+ * @swagger
  * /api/lyrics:
  *   get:
- *     summary: Lista todas las letras
+ *     summary: Lista letras publicadas
  *     tags: [Lyrics]
  *     parameters:
- *       - in: query
- *         name: genre
- *         schema: { type: string }
+ *       - { in: query, name: genre,    schema: { type: string } }
+ *       - { in: query, name: language, schema: { type: string, example: es } }
+ *       - { in: query, name: limit,    schema: { type: integer, default: 50 } }
  *     responses:
  *       200: { description: Array de letras }
  */
 router.get('/', lyricsController.list)
+
+/**
+ * @swagger
+ * /api/lyrics/search:
+ *   get:
+ *     summary: Búsqueda textual de letras
+ *     tags: [Lyrics]
+ *     parameters:
+ *       - { in: query, name: q, required: true, schema: { type: string } }
+ *     responses:
+ *       200: { description: Letras encontradas }
+ */
+router.get('/search', lyricsController.search)
+
+/**
+ * @swagger
+ * /api/lyrics/seller/{sellerId}:
+ *   get:
+ *     summary: Letras de un vendedor
+ *     tags: [Lyrics]
+ *     responses:
+ *       200: { description: Array de letras }
+ */
+router.get('/seller/:sellerId', lyricsController.bySeller)
 
 /**
  * @swagger
@@ -45,6 +76,7 @@ router.get('/:id', lyricsController.detail)
  */
 router.post('/', requireAuth, validate(lyricsSchemas.create), lyricsController.create)
 
+router.put('/:id', requireAuth, validate(lyricsSchemas.update), lyricsController.update)
 router.delete('/:id', requireAuth, lyricsController.remove)
 
 export default router

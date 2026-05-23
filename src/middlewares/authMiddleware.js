@@ -1,8 +1,11 @@
-import { supabase } from '../lib/supabase.js'
+import { supabase, userClient } from '../lib/supabase.js'
 
 /**
- * Middleware que verifica el JWT de Supabase en el header Authorization.
- * Si es válido, añade req.user al request y pasa al siguiente middleware.
+ * Verifica el JWT de Supabase y adjunta:
+ *   req.user      → datos del usuario
+ *   req.token     → JWT raw
+ *   req.supabase  → cliente Supabase autenticado como ese usuario
+ *                   (úsalo en services para que RLS funcione)
  */
 export async function requireAuth(req, res, next) {
   try {
@@ -20,6 +23,7 @@ export async function requireAuth(req, res, next) {
 
     req.user = user
     req.token = token
+    req.supabase = userClient(token)
     next()
   } catch (err) {
     next(err)
@@ -27,7 +31,7 @@ export async function requireAuth(req, res, next) {
 }
 
 /**
- * Middleware opcional: añade req.user si hay token válido, pero no bloquea.
+ * Igual que requireAuth pero no bloquea si no hay token.
  */
 export async function optionalAuth(req, res, next) {
   const authHeader = req.headers.authorization
@@ -39,6 +43,7 @@ export async function optionalAuth(req, res, next) {
     if (user) {
       req.user = user
       req.token = token
+      req.supabase = userClient(token)
     }
   } catch {
     // ignorar — la sesión es opcional

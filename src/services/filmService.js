@@ -1,23 +1,19 @@
 import { supabase } from '../lib/supabase.js'
 
 /**
- * Servicio de lyrics — tabla public.lyrics
- * Esquema: id, seller_id, seller_name, title, description, genre, language,
- * content, cover_url, tags[], price_standard, price_premium, price_exclusive,
- * likes, is_published.
+ * Servicio de films — tabla public.film_makers
+ * Esquema similar a beats: seller_id, seller_name, title, description, genre,
+ * cover_url, video_url, views, prices, tags, is_published, created_at.
  */
-export const lyricsService = {
-  async getAll({ genre, language, limit = 50 } = {}) {
+export const filmService = {
+  async getAll({ genre, limit = 50 } = {}) {
     let q = supabase
-      .from('lyrics')
+      .from('film_makers')
       .select('*')
       .eq('is_published', true)
       .order('created_at', { ascending: false })
       .limit(parseInt(limit, 10))
-
-    if (genre)    q = q.eq('genre', genre)
-    if (language) q = q.eq('language', language)
-
+    if (genre) q = q.eq('genre', genre)
     const { data, error } = await q
     if (error) throw { status: 500, message: error.message }
     return data
@@ -25,18 +21,18 @@ export const lyricsService = {
 
   async getById(id) {
     const { data, error } = await supabase
-      .from('lyrics')
+      .from('film_makers')
       .select('*')
       .eq('id', id)
       .maybeSingle()
     if (error) throw { status: 500, message: error.message }
-    if (!data) throw { status: 404, message: 'Letra no encontrada' }
+    if (!data) throw { status: 404, message: 'Film no encontrado' }
     return data
   },
 
   async getBySeller(sellerId) {
     const { data, error } = await supabase
-      .from('lyrics')
+      .from('film_makers')
       .select('*')
       .eq('seller_id', sellerId)
       .order('created_at', { ascending: false })
@@ -47,7 +43,7 @@ export const lyricsService = {
   async search(query, limit = 20) {
     if (!query) return []
     const { data, error } = await supabase
-      .from('lyrics')
+      .from('film_makers')
       .select('*')
       .eq('is_published', true)
       .or(`title.ilike.%${query}%,description.ilike.%${query}%,genre.ilike.%${query}%`)
@@ -56,23 +52,19 @@ export const lyricsService = {
     return data
   },
 
-  async create(lyric, sellerId, sellerName, client = supabase) {
-    const payload = {
-      ...lyric,
-      seller_id: sellerId,
-      seller_name: sellerName || lyric.seller_name || 'Unknown Artist'
-    }
-    const { data, error } = await client.from('lyrics').insert([payload]).select().single()
+  async create(film, sellerId, sellerName, client = supabase) {
+    const payload = { ...film, seller_id: sellerId, seller_name: sellerName || 'Unknown' }
+    const { data, error } = await client.from('film_makers').insert([payload]).select().single()
     if (error) throw { status: 400, message: error.message }
     return data
   },
 
   async update(id, updates, userId, client = supabase) {
-    const lyric = await this.getById(id)
-    if (lyric.seller_id !== userId) throw { status: 403, message: 'No puedes editar esta letra' }
+    const film = await this.getById(id)
+    if (film.seller_id !== userId) throw { status: 403, message: 'No puedes editar este film' }
 
     const { data, error } = await client
-      .from('lyrics')
+      .from('film_makers')
       .update(updates)
       .eq('id', id)
       .select()
@@ -82,11 +74,16 @@ export const lyricsService = {
   },
 
   async remove(id, userId, client = supabase) {
-    const lyric = await this.getById(id)
-    if (lyric.seller_id !== userId) throw { status: 403, message: 'No puedes eliminar esta letra' }
-
-    const { error } = await client.from('lyrics').delete().eq('id', id)
+    const film = await this.getById(id)
+    if (film.seller_id !== userId) throw { status: 403, message: 'No puedes eliminar este film' }
+    const { error } = await client.from('film_makers').delete().eq('id', id)
     if (error) throw { status: 500, message: error.message }
     return { success: true }
+  },
+
+  async incrementViews(id) {
+    const { data, error } = await supabase.rpc('increment_film_views', { film_id: id })
+    if (error) throw { status: 500, message: error.message }
+    return data
   }
 }
