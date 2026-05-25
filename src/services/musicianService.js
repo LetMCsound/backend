@@ -66,6 +66,40 @@ export const musicianService = {
       .select()
       .single()
     if (error) throw { status: 400, message: error.message }
+
+    // Si el nombre cambió, propagarlo a todos los comentarios del usuario
+    if (updates.name && updates.name !== musician.name) {
+      await supabase
+        .from('comments')
+        .update({ user_name: updates.name })
+        .eq('user_id', userId)
+      // No lanzamos error si falla — el perfil ya se guardó correctamente
+    }
+
+    return data
+  },
+
+  async create(userId, fields = {}) {
+    // Generar slug único a partir del nombre o del userId
+    const baseName = (fields.name || '').trim() || `user-${userId.slice(0, 8)}`
+    const slug = baseName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') + '-' + userId.slice(0, 4)
+
+    const { data, error } = await supabase
+      .from('musicians')
+      .insert([{
+        user_id:      userId,
+        name:         baseName,
+        slug,
+        bio:          fields.bio          || null,
+        location:     fields.location     || null,
+        avatar_url:   fields.avatar_url   || null,
+        cover_url:    fields.cover_url    || null,
+        categories:   fields.categories   || [],
+        is_published: true,
+      }])
+      .select()
+      .single()
+    if (error) throw { status: 400, message: error.message }
     return data
   },
 
