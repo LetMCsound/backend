@@ -67,13 +67,22 @@ export const musicianService = {
       .single()
     if (error) throw { status: 400, message: error.message }
 
-    // Si el nombre cambió, propagarlo a todos los comentarios del usuario
+    // Si el nombre cambió, propagarlo a comentarios y contenido publicado
     if (updates.name && updates.name !== musician.name) {
-      await supabase
-        .from('comments')
-        .update({ user_name: updates.name })
-        .eq('user_id', userId)
-      // No lanzamos error si falla — el perfil ya se guardó correctamente
+      const newName = updates.name
+      await Promise.allSettled([
+        // Comentarios
+        supabase.from('comments').update({ user_name: newName }).eq('user_id', userId),
+        // Beats
+        supabase.from('beats').update({ seller_name: newName }).eq('seller_id', userId),
+        // Letras
+        supabase.from('lyrics').update({ seller_name: newName }).eq('seller_id', userId),
+        // Films / videos
+        supabase.from('film').update({ seller_name: newName }).eq('seller_id', userId),
+        // Diseño gráfico
+        supabase.from('graphic_design').update({ seller_name: newName }).eq('seller_id', userId),
+      ])
+      // Promise.allSettled nunca lanza — el perfil ya está guardado aunque alguna tabla falle
     }
 
     return data
