@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabase.js'
+import { supabase, supabaseAdmin } from '../lib/supabase.js'
 
 /**
  * Servicio de musicians — tabla public.musicians
@@ -70,19 +70,25 @@ export const musicianService = {
     // Si el nombre cambió, propagarlo a comentarios y contenido publicado
     if (updates.name && updates.name !== musician.name) {
       const newName = updates.name
-      await Promise.allSettled([
-        // Comentarios
-        supabase.from('comments').update({ user_name: newName }).eq('user_id', userId),
-        // Beats
-        supabase.from('beats').update({ seller_name: newName }).eq('seller_id', userId),
-        // Letras
-        supabase.from('lyrics').update({ seller_name: newName }).eq('seller_id', userId),
-        // Films / videos
-        supabase.from('film').update({ seller_name: newName }).eq('seller_id', userId),
-        // Diseño gráfico
-        supabase.from('graphic_design').update({ seller_name: newName }).eq('seller_id', userId),
+      // supabaseAdmin bypasses RLS — necesario para actualizar otras tablas donde
+      // auth.uid() = seller_id / user_id (el anon client devuelve 0 rows silenciosamente)
+      const adminClient = supabaseAdmin || client
+      console.log(`[musicianService] Propagando nombre "${newName}" para userId=${userId} (admin=${!!supabaseAdmin})`)
+
+      const results = await Promise.allSettled([
+        adminClient.from('comments').update({ user_name: newName }).eq('user_id', userId),
+        adminClient.from('beats').update({ seller_name: newName }).eq('seller_id', userId),
+        adminClient.from('lyrics').update({ seller_name: newName }).eq('seller_id', userId),
+        adminClient.from('film_makers').update({ seller_name: newName }).eq('seller_id', userId),
+        adminClient.from('graphic_design').update({ seller_name: newName }).eq('seller_id', userId),
       ])
-      // Promise.allSettled nunca lanza — el perfil ya está guardado aunque alguna tabla falle
+
+      results.forEach((r, i) => {
+        const table = ['comments','beats','lyrics','film_makers','graphic_design'][i]
+        if (r.status === 'rejected') console.error(`[musicianService] Error actualizando ${table}:`, r.reason)
+        else if (r.value?.error) console.error(`[musicianService] Supabase error en ${table}:`, r.value.error)
+        else console.log(`[musicianService] ${table} actualizado correctamente`)
+      })
     }
 
     return data
