@@ -31,5 +31,12 @@ export const musicianController = {
   async search(req, res, next) {
     try { res.json(await musicianService.search(req.query.q, req.query.limit)) }
     catch (err) { next(err) }
+  },
+
+  async create(req, res, next) {
+    try {
+      const data = await musicianService.create(req.user.id, req.body)
+      res.status(201).json(data)
+    } catch (err) { next(err) }
   }
 }

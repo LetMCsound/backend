@@ -33,17 +33,33 @@ app.use(express.urlencoded({ extended: true }))
 app.use(morgan(config.env === 'production' ? 'combined' : 'dev'))
 
 // ── Rate limiting ──
-const limiter = rateLimit({
-  windowMs: config.rateLimit.windowMs,
-  max: config.rateLimit.max,
+// Rutas públicas: generoso (lectura de catálogo)
+const publicLimiter = rateLimit({
+  windowMs: 60_000,   // 1 minuto
+  max: 300,
   standardHeaders: true,
   legacyHeaders: false,
-  message: {
-    error: 'Demasiadas peticiones, intenta de nuevo más tarde'
-  }
+  message: { error: 'Demasiadas peticiones, intenta de nuevo más tarde' }
+})
+// Rutas sensibles: auth, compras, subidas
+const strictLimiter = rateLimit({
+  windowMs: 60_000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Demasiadas peticiones, intenta de nuevo más tarde' }
 })
 
-app.use('/api', limiter)
+app.use('/api/beats',         publicLimiter)
+app.use('/api/lyrics',        publicLimiter)
+app.use('/api/musicians',     publicLimiter)
+app.use('/api/film',          publicLimiter)
+app.use('/api/graphic',       publicLimiter)
+app.use('/api/comments',      publicLimiter)
+app.use('/api/notifications', publicLimiter)
+app.use('/api/auth',          strictLimiter)
+app.use('/api/ventas',        strictLimiter)
+app.use('/api/contratos',     strictLimiter)
 
 // ── Swagger ──
 app.use(
