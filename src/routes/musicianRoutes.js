@@ -79,6 +79,7 @@ router.get('/slug/:slug', musicianController.bySlug)
  */
 router.get('/:id', musicianController.detail)
 
-router.put('/:id', requireAuth, validate(musicianSchemas.update), musicianController.update)
+router.post('/',    requireAuth, musicianController.create)
+router.put('/:id',  requireAuth, validate(musicianSchemas.update), musicianController.update)
 
 export default router
