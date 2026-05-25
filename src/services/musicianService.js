@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabase.js'
+import { supabase, supabaseAdmin } from '../lib/supabase.js'
 
 /**
  * Servicio de musicians — tabla public.musicians
@@ -67,13 +67,28 @@ export const musicianService = {
       .single()
     if (error) throw { status: 400, message: error.message }
 
-    // Si el nombre cambió, propagarlo a todos los comentarios del usuario
+    // Si el nombre cambió, propagarlo a comentarios y contenido publicado
     if (updates.name && updates.name !== musician.name) {
-      await supabase
-        .from('comments')
-        .update({ user_name: updates.name })
-        .eq('user_id', userId)
-      // No lanzamos error si falla — el perfil ya se guardó correctamente
+      const newName = updates.name
+      // supabaseAdmin bypasses RLS — necesario para actualizar otras tablas donde
+      // auth.uid() = seller_id / user_id (el anon client devuelve 0 rows silenciosamente)
+      const adminClient = supabaseAdmin || client
+      console.log(`[musicianService] Propagando nombre "${newName}" para userId=${userId} (admin=${!!supabaseAdmin})`)
+
+      const results = await Promise.allSettled([
+        adminClient.from('comments').update({ user_name: newName }).eq('user_id', userId),
+        adminClient.from('beats').update({ seller_name: newName }).eq('seller_id', userId),
+        adminClient.from('lyrics').update({ seller_name: newName }).eq('seller_id', userId),
+        adminClient.from('film_makers').update({ seller_name: newName }).eq('seller_id', userId),
+        adminClient.from('graphic_design').update({ seller_name: newName }).eq('seller_id', userId),
+      ])
+
+      results.forEach((r, i) => {
+        const table = ['comments','beats','lyrics','film_makers','graphic_design'][i]
+        if (r.status === 'rejected') console.error(`[musicianService] Error actualizando ${table}:`, r.reason)
+        else if (r.value?.error) console.error(`[musicianService] Supabase error en ${table}:`, r.value.error)
+        else console.log(`[musicianService] ${table} actualizado correctamente`)
+      })
     }
 
     return data
